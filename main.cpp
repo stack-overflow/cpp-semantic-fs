@@ -7,6 +7,8 @@
 #include <map>
 #include <cmath>
 
+#include "linear_regression.h"
+
 struct node {
 public:
     typedef size_t node_id;
@@ -22,6 +24,7 @@ public:
     virtual std::reference_wrapper<node> get(node::node_id id) = 0;
     virtual std::reference_wrapper<node> get(const std::string& name) = 0;
     virtual void debug_print_nodes() {}
+    virtual ~data_source() {}
 };
 
 class dummy_data_source :
@@ -33,7 +36,7 @@ public:
         return std::ref((*ret.first).second);
     }
     virtual std::reference_wrapper<node> get(node::node_id id) { 
-
+        throw std::runtime_error("Not implemented\n");
     }
     virtual void  debug_print_nodes() {
         for (auto& node : nodes) {
@@ -53,62 +56,6 @@ std::vector< std::pair<std::string, std::string> > desc {
     {"file_b.txt", "text"}
 };
 
-class linear_regression {
-public:
-    linear_regression(size_t num_features) :
-        params(num_features + 1, 0.0f), // +1 due to the x0 feature
-        alpha(0.05f)
-    {}
-
-    inline float h_fun(const std::vector<float>& in_params,
-               const std::vector<float>& in_x)
-    {
-        float h_val = in_params[0];
-        for (size_t i = 0; i < in_x.size(); ++i) {
-            h_val += in_params[i + 1] * in_x[i];
-        }
-        return h_val;
-    }
-
-    void train(
-        const std::vector< std::vector<float> >& vx,
-        const std::vector< float >& vy)
-    {
-        float divergence = 1000.0f;
-        // Gradient descent
-        while (divergence != 0.0f) {
-            auto cp_params = params;
-            float inner = 0;
-            float trail_x = 1.0f;
-            divergence = 0;
-
-            for (size_t i = 0; i < vx.size(); ++i) {
-                float h_val = h_fun(cp_params, vx[i]);
-                inner += (h_val - vy[i]) * trail_x;
-            }
-            float outer = cp_params[0] - (alpha * (1.0f/vx.size()) * inner);
-            divergence += fabs(params[0] - outer);
-            params[0] = outer;
-
-            // Params greater than 0;
-            for (size_t p = 1; p < cp_params.size(); ++p) {
-                inner = 0;
-                for (size_t i = 0; i < vx.size(); ++i) {
-                    float h_val = h_fun(cp_params, vx[i]);
-                    inner += (h_val - vy[i]) * vx[i][p - 1];
-                }
-                outer = cp_params[p] - (alpha * (1.0f/vx.size()) * inner);
-                divergence += fabs(params[p] - outer);
-                params[p] = outer;
-            }
-        }
-        for (auto param : params) { std::cout << param << " "; }
-        std::cout << std::endl;
-    }
-private:
-    std::vector<float> params;
-    float alpha;
-};
 
 int main(int argc, char **argv)
 {
@@ -130,8 +77,5 @@ int main(int argc, char **argv)
     };
     std::vector<float> y { 2.0f, 4.0f, 5.0f, 4.0f, 5.0f };
     lr.train(x, y);
-
-
-
     return 0;
 };
