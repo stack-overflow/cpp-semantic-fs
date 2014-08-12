@@ -19,26 +19,21 @@ public:
     std::vector< std::reference_wrapper<node> > similiar;
 };
 
-class data_source {
-public:
-    virtual std::reference_wrapper<node> get(node::node_id id) = 0;
-    virtual std::reference_wrapper<node> get(const std::string& name) = 0;
-    virtual void debug_print_nodes() {}
-    virtual ~data_source() {}
-};
-
-class dummy_data_source :
-    public data_source
+class tag_engine
 {
 public:
-    virtual std::reference_wrapper<node> get(const std::string& name) {
+    std::reference_wrapper<node> get(const std::string& name) {
         auto ret = nodes.insert(std::make_pair(name, node(name)));
         return std::ref((*ret.first).second);
     }
-    virtual std::reference_wrapper<node> get(node::node_id id) { 
+    std::reference_wrapper<node> get(node::node_id id) { 
         throw std::runtime_error("Not implemented\n");
     }
-    virtual void  debug_print_nodes() {
+    void add_link(std::reference_wrapper<node> first, std::reference_wrapper<node> second) {
+        first.get().similiar.push_back(second);
+        second.get().similiar.push_back(first);
+    }
+    void  debug_print_nodes() {
         for (auto& node : nodes) {
             std::cout << node.second.name << "\n";
             for (auto& doc : node.second.similiar) {
@@ -59,23 +54,24 @@ std::vector< std::pair<std::string, std::string> > desc {
 
 int main(int argc, char **argv)
 {
-    data_source *ts = new dummy_data_source;
+    tag_engine *ts = new tag_engine;
 
     for (auto& p : desc)
     {
         std::cout << p.first << " " << p.second << std::endl;
         auto file_node = ts->get(p.first);
-        ts->get(p.second).get().similiar.push_back(file_node);
+        auto tag_node = ts->get(p.second);
+        ts->add_link(file_node, tag_node);
     }
 
     ts->debug_print_nodes();
     delete ts;
 
-    linear_regression lr(1);
-    std::vector< std::vector<float> > x {
-        {1}, {2}, {3}, {4}, {5}
-    };
-    std::vector<float> y { 2.0f, 4.0f, 5.0f, 4.0f, 5.0f };
-    lr.train(x, y);
+//    linear_regression lr(1);
+//    std::vector< std::vector<float> > x {
+//        {1}, {2}, {3}, {4}, {5}
+//    };
+//    std::vector<float> y { 2.0f, 4.0f, 5.0f, 4.0f, 5.0f };
+//    lr.train(x, y);
     return 0;
 };
