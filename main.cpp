@@ -51,6 +51,10 @@ std::vector< std::pair<std::string, std::string> > desc {
     {"file_b.txt", "text"}
 };
 
+class data_source {
+    virtual node fetch_item(const std::string& name) = 0;
+    virtual std::vector<node> fetch_dir(const std::string& name) = 0;
+};
 
 int main(int argc, char **argv)
 {
@@ -74,4 +78,4 @@ int main(int argc, char **argv)
 //    std::vector<float> y { 2.0f, 4.0f, 5.0f, 4.0f, 5.0f };
 //    lr.train(x, y);
     return 0;
-};
+}
